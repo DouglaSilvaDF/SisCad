@@ -63,7 +63,7 @@ def editar_lead():
 
     if st.button("Buscar") or session_state["searching"]:
         if lead_id:
-            lead_index = df.index[df['Lead'] == lead_id].tolist()
+            lead_index = df.index[df['lead'] == lead_id].tolist()
             if lead_index:
                 session_state["searching"] = False
                 session_state["lead_index"] = lead_index[0]
