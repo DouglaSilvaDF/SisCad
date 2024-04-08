@@ -66,7 +66,7 @@ def editar_lead():
             lead_index = df.index[df['Lead'] == lead_id].tolist()
             if lead_index:
                 session_state["searching"] = False
-                session_state["lead_index"] = lead_index[2]
+                session_state["lead_index"] = lead_index[1]
             else:
                 st.warning(f"Lead {lead_id} não encontrado na planilha.")
                 return  # Retorna aqui para evitar a execução adicional da função
