@@ -60,7 +60,6 @@ def cadastrar_lead():
                 session_state["obs"] = ""
                 st.session_state["lead_cadastro"] = session_state
 
-
 # EDITAR LEAD
 def editar_lead():
     st.title("Edição de Lead")
