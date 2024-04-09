@@ -46,7 +46,7 @@ def cadastrar_lead():
                 st.stop()
             else:
                 data_cad_str = datetime.strftime(data_cad, "%d/%m/%Y")
-                # Add new lead
+                # Adicionar novo lead
                 new_row = [data_cad_str, session_state["lead"], session_state["lead_name"], session_state["corretor_sb"], 
                            session_state["status_sb"], session_state["momentolead_sb"], session_state["obs"]]
                 SHEET.append_row(new_row)
