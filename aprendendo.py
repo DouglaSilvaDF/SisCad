@@ -21,36 +21,44 @@ MOMENTOLEAD = ["REAGENDAMENTO", "SEM INTERAÇÃO", "ENVIO DE DOC", "EM PROCESSO"
 
 def cadastrar_lead():
     st.title("Cadastro de Novo Lead")
+    
+    # Recuperar o estado da sessão ou inicializá-lo
+    session_state = st.session_state.get("lead_cadastro", {"lead": "", "lead_name": "", "corretor_sb": CORRETORES[0], 
+                                                           "status_sb": STATUS[1], "momentolead_sb": MOMENTOLEAD[0], 
+                                                           "obs": ""})
+    
     with st.form(key="Cadastro"):
         data_cad = st.date_input(label="Data")
-        lead = st.text_input(label="Digite o nº do Lead")
-        lead_name = st.text_input(label="Digite o nome do Cliente")
-        corretor_sb = st.selectbox("Corretor",options=CORRETORES,index=None)
-        status_sb = st.selectbox("Status",options=STATUS,index=1)
-        momentolead_sb = st.selectbox("Momento do Lead",options=MOMENTOLEAD, index=None)
-        obs = st.text_area(label="Observação")
+        session_state["lead"] = st.text_input(label="Digite o nº do Lead", value=session_state["lead"])
+        session_state["lead_name"] = st.text_input(label="Digite o nome do Cliente", value=session_state["lead_name"])
+        session_state["corretor_sb"] = st.selectbox("Corretor", options=CORRETORES, index=CORRETORES.index(session_state["corretor_sb"]))
+        session_state["status_sb"] = st.selectbox("Status", options=STATUS, index=STATUS.index(session_state["status_sb"]))
+        session_state["momentolead_sb"] = st.selectbox("Momento do Lead", options=MOMENTOLEAD, index=MOMENTOLEAD.index(session_state["momentolead_sb"]))
+        session_state["obs"] = st.text_area(label="Observação", value=session_state["obs"])
 
         st.markdown("**required**")
 
         submit_button = st.form_submit_button(label="Cadastrar")
 
         if submit_button:
-            if not lead or not lead_name:
+            if not session_state["lead"] or not session_state["lead_name"]:
                 st.warning("Preencha todos os campos para cadastrar.")
                 st.stop()
             else:
-                # Check if lead already exists
-                if lead in df['Lead'].values:
-                    corretor = df.loc[df['Lead'] == lead, 'Corretor'].values[0]
-                    st.warning(f"O lead {lead} já existe e está cadastrado com o corretor {corretor}")
-                    st.write("Peça para o administrador mudar o lead para você fazer as atualizações")
-                    st.stop()
-                else:
-                    data_cad_str = datetime.strftime(data_cad, "%d/%m/%Y")
-                    # Add new lead
-                    new_row = [data_cad_str, lead, lead_name, corretor_sb, status_sb, momentolead_sb, obs]
-                    SHEET.append_row(new_row)
-                    st.success(f"Lead {lead} cadastrado com sucesso!")
+                data_cad_str = datetime.strftime(data_cad, "%d/%m/%Y")
+                # Add new lead
+                new_row = [data_cad_str, session_state["lead"], session_state["lead_name"], session_state["corretor_sb"], 
+                           session_state["status_sb"], session_state["momentolead_sb"], session_state["obs"]]
+                SHEET.append_row(new_row)
+                st.success(f"Lead {session_state['lead']} cadastrado com sucesso!")
+                # Limpar os campos do formulário após a inclusão
+                session_state["lead"] = ""
+                session_state["lead_name"] = ""
+                session_state["corretor_sb"] = CORRETORES[0]
+                session_state["status_sb"] = STATUS[1]
+                session_state["momentolead_sb"] = MOMENTOLEAD[0]
+                session_state["obs"] = ""
+                st.session_state["lead_cadastro"] = session_state
 
 
 # EDITAR LEAD
