@@ -51,15 +51,18 @@ def cadastrar_lead():
                            session_state["status_sb"], session_state["momentolead_sb"], session_state["obs"]]
                 SHEET.append_row(new_row)
                 st.success(f"Lead {session_state['lead']} cadastrado com sucesso!")
-                
                 # Limpar os campos do formulário de cadastro após a inclusão
-                session_state["lead"] = ""
-                session_state["lead_name"] = ""
-                session_state["corretor_sb"] = CORRETORES[0]
-                session_state["status_sb"] = STATUS[1]
-                session_state["momentolead_sb"] = MOMENTOLEAD[0]
-                session_state["obs"] = ""
-                st.session_state["lead_cadastro"] = session_state
+                limpar_campos(session_state)
+
+
+def limpar_campos(session_state):
+    session_state["lead"] = ""
+    session_state["lead_name"] = ""
+    session_state["corretor_sb"] = CORRETORES[0]
+    session_state["status_sb"] = STATUS[1]
+    session_state["momentolead_sb"] = MOMENTOLEAD[0]
+    session_state["obs"] = ""
+    st.session_state["lead_cadastro"] = session_state
 
 # EDITAR LEAD
 def editar_lead():
