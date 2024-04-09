@@ -9,12 +9,6 @@ CREDS = ServiceAccountCredentials.from_json_keyfile_name("token.json", SCOPE)
 CLIENT = gspread.authorize(CREDS)
 SHEET = CLIENT.open("Acomp").sheet1  # Altere para o nome da sua planilha
 
-# Fetch all values from the sheet
-values = SHEET.get_all_values()
-
-# Convert to DataFrame
-df = pd.DataFrame(values[1:], columns=values[0])
-
 CORRETORES = ["DOUGLAS", "CHRIS", "FABIO", "GABRIELA", "JOSUE", "MAYSA", "MICHELLE", "LEONARDO", "TAYNAH", "TIAGO", "WANDERSON", "WELLINGTON"]
 STATUS = ["AGENDAMENTO", "REAGENDAMENTO", "VISITA", "PROPOSTA", "EM RESERVA", "VENDA", "FINALIZADOS"]
 MOMENTOLEAD = ["REAGENDAMENTO", "SEM INTERAÇÃO", "ENVIO DE DOC", "EM PROCESSO", "DESISTENCIA", "PROPOSTA", "APROVADO", "CONDICIONADO", "REPROVADO", "COND PENDENTE", "RESTRIÇÃO CAD", "PENDENTE"]
@@ -22,106 +16,58 @@ MOMENTOLEAD = ["REAGENDAMENTO", "SEM INTERAÇÃO", "ENVIO DE DOC", "EM PROCESSO"
 def cadastrar_lead():
     st.title("Cadastro de Novo Lead")
     
-    lead = ""
-    lead_name = ""
-    corretor_sb = CORRETORES[0]
-    status_sb = STATUS[1]
-    momentolead_sb = MOMENTOLEAD[0]
-    obs = ""
+    session_state = st.session_state.get("cadastro_lead", {"lead": "", "lead_name": "", "corretor_sb": CORRETORES[0], 
+                                                           "status_sb": STATUS[1], "momentolead_sb": MOMENTOLEAD[0], 
+                                                           "obs": ""})
     
     with st.form(key="Cadastro"):
         data_cad = st.date_input(label="Data")
-        lead = st.text_input(label="Digite o nº do Lead", value=lead)
-        lead_name = st.text_input(label="Digite o nome do Cliente", value=lead_name)
-        corretor_sb = st.selectbox("Corretor", options=CORRETORES, index=CORRETORES.index(corretor_sb))
-        status_sb = st.selectbox("Status", options=STATUS, index=STATUS.index(status_sb))
-        momentolead_sb = st.selectbox("Momento do Lead", options=MOMENTOLEAD, index=MOMENTOLEAD.index(momentolead_sb))
-        obs = st.text_area(label="Observação", value=obs)
+        session_state["lead"] = st.text_input(label="Digite o nº do Lead", value=session_state["lead"])
+        session_state["lead_name"] = st.text_input(label="Digite o nome do Cliente", value=session_state["lead_name"])
+        session_state["corretor_sb"] = st.selectbox("Corretor", options=CORRETORES, index=CORRETORES.index(session_state["corretor_sb"]))
+        session_state["status_sb"] = st.selectbox("Status", options=STATUS, index=STATUS.index(session_state["status_sb"]))
+        session_state["momentolead_sb"] = st.selectbox("Momento do Lead", options=MOMENTOLEAD, index=MOMENTOLEAD.index(session_state["momentolead_sb"]))
+        session_state["obs"] = st.text_area(label="Observação", value=session_state["obs"])
 
         st.markdown("**required**")
 
-        if st.form_submit_button(label="Cadastrar"):
-            if not lead or not lead_name:
+        submit_button = st.form_submit_button(label="Cadastrar")
+
+        if submit_button:
+            if not session_state["lead"] or not session_state["lead_name"]:
                 st.warning("Preencha todos os campos para cadastrar.")
                 st.stop()
             else:
                 data_cad_str = datetime.strftime(data_cad, "%d/%m/%Y")
                 # Adicionar novo lead
-                new_row = [data_cad_str, lead, lead_name, corretor_sb, status_sb, momentolead_sb, obs]
+                new_row = [data_cad_str, session_state["lead"], session_state["lead_name"], session_state["corretor_sb"], 
+                           session_state["status_sb"], session_state["momentolead_sb"], session_state["obs"]]
                 SHEET.append_row(new_row)
-                st.success(f"Lead {lead} cadastrado com sucesso!")
+                st.success(f"Lead {session_state['lead']} cadastrado com sucesso!")
                 # Limpar os campos do formulário de cadastro após a inclusão
-                lead = ""
-                lead_name = ""
-                corretor_sb = CORRETORES[0]
-                status_sb = STATUS[1]
-                momentolead_sb = MOMENTOLEAD[0]
-                obs = ""
+                session_state["lead"] = ""
+                session_state["lead_name"] = ""
+                session_state["corretor_sb"] = CORRETORES[0]
+                session_state["status_sb"] = STATUS[1]
+                session_state["momentolead_sb"] = MOMENTOLEAD[0]
+                session_state["obs"] = ""
 
-# EDITAR LEAD
 def editar_lead():
     st.title("Edição de Lead")
     lead_id = st.text_input(label="Digite o número do Lead que deseja editar")
 
-    # Recuperar o estado da sessão ou inicializá-lo
-    session_state = st.session_state.get("lead_editing", {"searching": True, "lead_index": None})
+    session_state_edit = st.session_state.get("editar_lead", {"searching": True, "lead_index": None})
 
-    if st.button("Buscar") or session_state["searching"]:
+    if st.button("Buscar") or session_state_edit["searching"]:
         if lead_id:
             lead_index = df.index[df['Lead'] == lead_id].tolist()
             if lead_index:
-                session_state["searching"] = False
-                session_state["lead_index"] = lead_index[0]
+                session_state_edit["searching"] = False
+                session_state_edit["lead_index"] = lead_index[0]
             else:
                 st.warning(f"Lead {lead_id} não encontrado na planilha.")
-                return  # Retorna aqui para evitar a execução adicional da função
-
-    if not session_state["searching"]:
-        lead_index = session_state["lead_index"]
-        if lead_index is not None and lead_index >= 0 and lead_index < len(df):
-            # Buscar dados atualizados da planilha
-            data_cad_str = df.at[lead_index, 'Data']
-            try:
-                data_cad = datetime.strptime(data_cad_str, "%d/%m/%Y")
-            except ValueError:
-                st.error("Formato de data inválido na planilha. Certifique-se de que a data esteja no formato DD/MM/AAAA.")
-                st.stop()
-
-            lead_name = df.at[lead_index, 'NomeCliente']
-            corretor_sb = df.at[lead_index, 'Corretor']
-            status_sb = df.at[lead_index, 'Status']
-            momentolead_sb = df.at[lead_index, 'MomentoLead']
-            obs = df.at[lead_index, 'Observação']
-
-            st.markdown("**required**")
-
-            with st.form(key="editar_lead_form"):
-                # Exibe os campos de edição com os dados atualizados da planilha
-                data_cad = st.date_input(label="Data", value=data_cad)
-                lead_name = st.text_input(label="Nome do Cliente", value=lead_name)
-                corretor_sb = st.selectbox("Corretor", options=CORRETORES, index=CORRETORES.index(corretor_sb) if corretor_sb in CORRETORES else 0)
-                status_sb = st.selectbox("Status", options=STATUS, index=STATUS.index(status_sb) if status_sb in STATUS else 0)
-                momentolead_sb = st.selectbox("Momento do Lead", options=MOMENTOLEAD, index=MOMENTOLEAD.index(momentolead_sb) if momentolead_sb in MOMENTOLEAD else 0)
-                obs = st.text_area(label="Observação", value=obs)
-
-                if st.form_submit_button(label="Salvar"):
-                    # Update lead
-                    SHEET.update_cell(lead_index + 2, 4, lead_name)
-                    SHEET.update_cell(lead_index + 2, 5, corretor_sb)
-                    SHEET.update_cell(lead_index + 2, 6, status_sb)
-                    SHEET.update_cell(lead_index + 2, 7, momentolead_sb)
-                    SHEET.update_cell(lead_index + 2, 8, obs)
-                    st.success(f"Lead {lead_id} atualizado com sucesso.")
-                    # Limpar os campos do formulário após a atualização
-                    session_state["searching"] = True
-                    session_state["lead_index"] = None
-                    st.rerun()
-        else:
-            st.warning("Índice de lead inválido.")
-            return
-
-    # Salva o estado da sessão
-    st.session_state["lead_editing"] = session_state
+                return
+    # Restante do código...
 
 def filtrar_lead():
     st.title("Filtragem de Leads")
