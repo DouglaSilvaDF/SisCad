@@ -103,7 +103,7 @@ def editar_lead():
                     # Update lead
                     SHEET.update_cell(lead_index + 1, 4, lead_name)
                     SHEET.update_cell(lead_index + 1, 5, corretor_sb)
-                    SHEET.update_cell(lead_index + 1 6, status_sb)
+                    SHEET.update_cell(lead_index + 1, 6, status_sb)
                     SHEET.update_cell(lead_index + 1, 7, momentolead_sb)
                     SHEET.update_cell(lead_index + 1, 8, obs)
                     st.success(f"Lead {lead_id} atualizado com sucesso.")
