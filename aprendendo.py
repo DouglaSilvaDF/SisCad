@@ -101,11 +101,11 @@ def editar_lead():
 
                 if st.form_submit_button(label="Salvar"):
                     # Update lead
-                    SHEET.update_cell(lead_index + 3, 4, lead_name)
-                    SHEET.update_cell(lead_index + 3, 5, corretor_sb)
-                    SHEET.update_cell(lead_index + 3, 6, status_sb)
-                    SHEET.update_cell(lead_index + 3, 7, momentolead_sb)
-                    SHEET.update_cell(lead_index + 3, 8, obs)
+                    SHEET.update_cell(lead_index + 1, 4, lead_name)
+                    SHEET.update_cell(lead_index + 1, 5, corretor_sb)
+                    SHEET.update_cell(lead_index + 1 6, status_sb)
+                    SHEET.update_cell(lead_index + 1, 7, momentolead_sb)
+                    SHEET.update_cell(lead_index + 1, 8, obs)
                     st.success(f"Lead {lead_id} atualizado com sucesso.")
                     # Limpar os campos do formulário após a atualização
                     session_state["searching"] = True
